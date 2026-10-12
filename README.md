@@ -1,161 +1,167 @@
-# Porto Seguro – Safe Driver Prediction
+# Porto Seguro – Vorhersage von Versicherungsschäden
 
-## Project Overview
+**Machine Learning | Data Analytics | Versicherungsrisiko | Imbalanced Classification**
 
-This repository presents my individual contribution to an academic group project developed for the **Advanced Data Analytics** course.
+## 1. Projektübersicht (Project Overview)
 
-The project is based on the **Porto Seguro Safe Driver Prediction** dataset and focuses on an insurance-risk classification problem: predicting whether a policyholder is likely to file a claim.
+Dieses Repository dokumentiert meinen persönlichen Beitrag zu einem universitären Gruppenprojekt im Modul **Advanced Data Analytics**.
 
-The main challenge is the strong class imbalance. In the dataset used in the notebook, the target contains:
+Ziel des Projekts ist es, mithilfe von Machine Learning vorherzusagen, ob ein Versicherungsnehmer einen Schaden melden wird.
 
-- **573,518 observations of class 0**
-- **21,694 observations of class 1**
-- approximately **3.64% positive cases**
+Dafür verwende ich den Datensatz der Kaggle-Challenge *Porto Seguro's Safe Driver Prediction*.
 
-Because of this imbalance, model evaluation does not rely on accuracy alone. Particular attention is given to **ROC-AUC, Normalized Gini, Recall, Precision, and F1-score**.
+Eine besondere Herausforderung ist das starke Ungleichgewicht zwischen den beiden Zielklassen. Nur etwa 3,64 % der Beobachtungen gehören zur positiven Klasse.
 
-> **Scope of this repository:** preprocessing, Logistic Regression, class-imbalance handling, Neural Networks, cross-validation, learning curves, dimensionality reduction, and hyperparameter optimization.
+In diesem Projekt untersuche ich verschiedene Machine-Learning-Modelle und Methoden, um mit diesem Klassenungleichgewicht umzugehen.
 
----
+**Schwerpunkte des Projekts:**
 
-## Dataset
+- Datenvorverarbeitung und Feature Engineering
+- Behandlung unausgeglichener Klassen
+- Logistic Regression und Neural Networks
+- Cross-Validation und Hyperparameter-Optimierung
+- Bewertung und Vergleich der Modellleistung
 
-The notebook loads the Porto Seguro dataset directly from **OpenML** using:
+## 2. Wichtigste Ergebnisse (Key Results)
+
+Das beste getestete Modell ist eine **Logistic Regression mit angepassten Klassengewichten**, deren Hyperparameter mit GridSearchCV optimiert wurden.
+
+| Metrik | Ergebnis |
+|---|---:|
+| ROC-AUC | **0,6317** |
+| Normalized Gini | **0,2634** |
+| Recall | **56,07 %** |
+| Precision | 5,41 % |
+| F1-Score | 0,0986 |
+| Accuracy | 62,63 % |
+
+**Wichtigste Erkenntnis:**
+
+Das optimierte Modell erkennt ungefähr 56 % der tatsächlichen Schadensfälle. Allerdings werden auch viele Versicherungsnehmer fälschlicherweise als positive Fälle klassifiziert.
+
+Die Ergebnisse zeigen, wie wichtig geeignete Bewertungsmetriken bei unausgeglichenen Datensätzen sind.
+
+## 3. Geschäftlicher Hintergrund (Business Problem)
+
+Für Versicherungsunternehmen ist die Einschätzung von Risiken eine wichtige Aufgabe.
+
+Machine-Learning-Modelle können dabei helfen, Muster in Versicherungsdaten zu erkennen und mögliche Schadensfälle besser einzuschätzen.
+
+Die zentrale Fragestellung lautet:
+
+**Kann ein Machine-Learning-Modell Versicherungsnehmer identifizieren, die mit höherer Wahrscheinlichkeit einen Schaden melden?**
+
+Dabei entstehen zwei mögliche Fehler:
+
+- **False Negative:** Ein tatsächlicher Schadensfall wird nicht erkannt.
+- **False Positive:** Ein Versicherungsnehmer wird als möglicher Schadensfall eingestuft, obwohl kein Schaden auftritt.
+
+Beide Fehlerarten können unterschiedliche wirtschaftliche Auswirkungen haben.
+
+Deshalb ist es wichtig, nicht nur die Accuracy, sondern auch Precision, Recall und ROC-AUC zu betrachten.
+
+## 4. Datensatz und Klassenungleichgewicht (Dataset & Class Imbalance)
+
+Der Datensatz stammt aus der Kaggle-Challenge *Porto Seguro's Safe Driver Prediction*.
+
+Die Daten werden im Jupyter Notebook direkt über OpenML geladen.
 
 ```python
 fetch_openml(data_id=42742, as_frame=True)
 ```
 
-Dataset dimensions used in the notebook:
+### Datensatzübersicht
 
-- **595,212 observations**
-- **57 input features**
+| Eigenschaft | Wert |
+|---|---:|
+| Beobachtungen | 595.212 |
+| Eingangsmerkmale | 57 |
+| Klasse 0 | 573.518 |
+| Klasse 1 | 21.694 |
+| Anteil der positiven Klasse | 3,64 % |
 
-A stratified 80/20 train-test split is used:
+### Train-Test-Split
 
-- Training set: **476,169 × 57**
-- Test set: **119,043 × 57**
+Die Daten werden mit einem stratifizierten 80/20-Split aufgeteilt.
 
----
+| Datensatz | Beobachtungen |
+|---|---:|
+| Training | 476.169 |
+| Test | 119.043 |
 
-## Preprocessing
+Durch die stratifizierte Aufteilung bleibt die Klassenverteilung in beiden Datensätzen ungefähr erhalten.
 
-The preprocessing workflow treats feature types separately.
+### Herausforderung: Class Imbalance
 
-### Numerical features
+Da nur ein kleiner Teil der Beobachtungen zur positiven Klasse gehört, kann ein Modell eine sehr hohe Accuracy erreichen, ohne tatsächliche Schadensfälle zuverlässig zu erkennen.
 
-- Median imputation
-- Standardization with `StandardScaler`
+Aus diesem Grund verwende ich mehrere Bewertungsmetriken, insbesondere ROC-AUC, Recall, Precision und F1-Score.
 
-### Categorical features
+## 5. Methodik (Methodology)
 
-- Conversion to a consistent object type
-- Missing category replacement with `"Missing"`
-- One-Hot Encoding with `handle_unknown="ignore"`
+### 5.1 Datenvorverarbeitung (Preprocessing)
 
-The 14 categorical variables produce **184 encoded features**.
+Die Daten enthalten numerische, kategoriale und binäre Merkmale.
 
-### Binary features
+Für jeden Merkmalstyp verwende ich geeignete Vorverarbeitungsschritte.
 
-- Converted to numeric floating-point values
+**Numerische Merkmale**
 
-After preprocessing, the feature matrix contains **227 features**:
+- Fehlende Werte durch den Median ersetzen
+- Standardisierung mit `StandardScaler`
 
-- Training matrix: **476,169 × 227**
-- Test matrix: **119,043 × 227**
+**Kategoriale Merkmale**
 
-The preprocessing workflow was later integrated into a reproducible Scikit-Learn `Pipeline` with a `ColumnTransformer`.
+- Einheitliche Datentypen verwenden
+- Fehlende Werte durch `"Missing"` ersetzen
+- One-Hot Encoding mit `handle_unknown="ignore"`
 
----
+**Binäre Merkmale**
 
-## Models and Experiments
+- Umwandlung in numerische Werte
 
-The following approaches were evaluated:
+Nach dem Preprocessing enthält die Feature-Matrix insgesamt **227 Merkmale**.
+
+Die Verarbeitung wird mit `ColumnTransformer` und `Pipeline` in Scikit-Learn umgesetzt.
+
+### 5.2 Modellentwicklung
+
+Ich habe verschiedene Modelle und Ansätze untersucht:
 
 1. Logistic Regression
 2. Balanced Logistic Regression
 3. Neural Network (`MLPClassifier`)
-4. Neural Network with Random Undersampling
-5. Logistic Regression with TruncatedSVD
-6. Hyperparameter Optimization with `GridSearchCV`
-7. Final Optimized Logistic Regression
+4. Neural Network mit Random Undersampling
+5. Logistic Regression mit TruncatedSVD
+6. Hyperparameter-Optimierung mit GridSearchCV
 
----
+### 5.3 Dimensionality Reduction
 
-## Model Comparison
-
-| Model | Accuracy | Precision | Recall | F1-score | ROC-AUC |
-|---|---:|---:|---:|---:|---:|
-| Logistic Regression | 0.9635 | 0.3750 | 0.0007 | 0.0014 | 0.6316 |
-| Logistic Regression (Balanced) | 0.6266 | 0.0539 | 0.5584 | 0.0983 | 0.6312 |
-| Neural Network | 0.9636 | 0.0000 | 0.0000 | 0.0000 | 0.6286 |
-| Neural Network (Undersampling) | 0.6565 | 0.0532 | 0.5013 | 0.0962 | 0.6170 |
-| **Optimized Logistic Regression (C=0.01)** | **0.6263** | **0.0541** | **0.5607** | **0.0986** | **0.6317** |
-
-The unbalanced models achieve high accuracy mainly because they predict the majority class. Balancing the Logistic Regression substantially improves minority-class detection.
-
----
-
-## Learning Curve
-
-The learning curve was calculated on a stratified development sample of **100,000 observations**.
-
-Training ROC-AUC:
-
-```text
-[0.78979466 0.70562104 0.66975395 0.65857544 0.64939537]
-```
-
-Validation ROC-AUC:
-
-```text
-[0.55596254 0.57929510 0.59804352 0.60471512 0.60971291]
-```
-
-![Learning Curve](images/learning_curve.png)
-
-As the training size increases, the validation score improves while the training score decreases, reducing the gap between both curves.
-
----
-
-## Dimensionality Reduction
-
-`TruncatedSVD` was evaluated using 3-fold cross-validation.
+Zusätzlich habe ich `TruncatedSVD` untersucht, um die Anzahl der Merkmale zu reduzieren.
 
 | Experiment | Mean CV ROC-AUC |
 |---|---:|
-| Logistic Regression without SVD | 0.6097 |
-| Logistic Regression + TruncatedSVD | 0.6111 |
+| Logistic Regression ohne SVD | 0,6097 |
+| Logistic Regression mit SVD | 0,6111 |
 
-The improvement from dimensionality reduction was small, so TruncatedSVD was not retained for the final model.
+Die Verbesserung war gering. Deshalb wurde TruncatedSVD nicht für das finale Modell verwendet.
 
----
+### 5.4 Hyperparameter-Optimierung
 
-## Hyperparameter Optimization
+Für die Optimierung der Logistic Regression habe ich `GridSearchCV` verwendet.
 
-`GridSearchCV` was used to test:
+Getestete Werte:
 
 ```python
 model__C = [0.01, 0.1, 1, 10]
 ```
 
-Best parameter:
+**Bestes Ergebnis:**
 
-```text
-C = 0.01
-```
+- Bester Parameter: `C = 0.01`
+- ROC-AUC in der 3-Fold Cross-Validation: `0.6156`
 
-Best 3-fold cross-validation ROC-AUC:
-
-```text
-0.6156159653
-```
-
----
-
-## Final Model
-
-The final model is an optimized Logistic Regression with:
+Das finale Modell verwendet:
 
 ```python
 LogisticRegression(
@@ -166,133 +172,113 @@ LogisticRegression(
 )
 ```
 
-Final test results:
+### 5.5 Cross-Validation
 
-```text
-Accuracy:        0.6263
-Precision:       0.0541
-Recall:          0.5607
-F1-score:        0.0986
-ROC-AUC:         0.6317
-Normalized Gini: 0.2634
-```
+Zur Überprüfung der Modellstabilität habe ich eine stratifizierte 5-Fold Cross-Validation durchgeführt.
 
-Confusion matrix:
+| Metrik | Ergebnis |
+|---|---:|
+| Mean Normalized Gini | 0,2568 |
+| Standardabweichung | 0,0063 |
 
-```text
-[[72127 42577]
- [ 1906  2433]]
-```
+Die geringe Standardabweichung deutet auf relativ stabile Ergebnisse zwischen den einzelnen Folds hin.
 
-The model detects approximately 56% of positive cases, but this comes with a high number of false positives.
+## 6. Modellvergleich (Model Comparison)
 
----
+Die folgende Tabelle zeigt die Ergebnisse der wichtigsten getesteten Modelle.
 
-## Cross-Validation Stability
+| Modell | Precision | Recall | F1-Score | ROC-AUC |
+|---|---:|---:|---:|---:|
+| Logistic Regression | 0,3750 | 0,0007 | 0,0014 | 0,6316 |
+| Balanced Logistic Regression | 0,0539 | 0,5584 | 0,0983 | 0,6312 |
+| Neural Network | 0,0000 | 0,0000 | 0,0000 | 0,6286 |
+| Neural Network + Undersampling | 0,0532 | 0,5013 | 0,0962 | 0,6170 |
+| **Optimized Logistic Regression** | **0,0541** | **0,5607** | **0,0986** | **0,6317** |
 
-The final model was evaluated using stratified 5-fold cross-validation.
+### Interpretation
 
-ROC-AUC per fold:
+Die Ergebnisse zeigen, dass die Modelle ohne Behandlung des Klassenungleichgewichts kaum positive Fälle erkennen.
 
-```text
-[0.63124636 0.63166057 0.62479877 0.62443940 0.62982698]
-```
+Durch die Verwendung von `class_weight="balanced"` verbessert sich der Recall deutlich.
 
-Normalized Gini per fold:
+Das optimierte Logistic-Regression-Modell erzielt unter den getesteten Varianten den höchsten ROC-AUC-Wert.
 
-```text
-[0.26249271 0.26332115 0.24959753 0.24887881 0.25965396]
-```
+Das Neural Network konnte die Logistic Regression in diesem Experiment nicht übertreffen.
 
-Mean Normalized Gini:
+## 7. Visualisierungen (Visualizations)
 
-```text
-0.2567888319
-```
+### 7.1 ROC Curve
 
-Standard deviation:
-
-```text
-0.0062880465
-```
-
-The low standard deviation indicates relatively stable performance across folds.
-
----
-
-## Visual Evaluation
-
-### ROC Curve
+Die ROC-Kurve zeigt, wie gut das Modell zwischen den beiden Klassen unterscheiden kann.
 
 ![ROC Curve](images/roc_curve.png)
 
-### Precision-Recall Curve
+Der ROC-AUC-Wert des finalen Modells beträgt 0,6317. Dies deutet auf eine begrenzte, aber über dem Zufall liegende Unterscheidungsfähigkeit hin.
+
+### 7.2 Precision-Recall Curve
+
+Die Precision-Recall-Kurve ist besonders hilfreich bei unausgeglichenen Datensätzen.
 
 ![Precision-Recall Curve](images/precision_recall_curve.png)
 
----
+Sie zeigt den Zusammenhang zwischen Precision und Recall bei unterschiedlichen Entscheidungsschwellen.
 
-## Key Findings
+### 7.3 Learning Curve
 
-- **Accuracy is misleading** for this highly imbalanced classification problem.
-- Explicitly addressing class imbalance substantially improves Recall.
-- The Neural Network did not outperform Logistic Regression in this experiment.
-- TruncatedSVD produced only a marginal cross-validation improvement.
-- Hyperparameter tuning identified `C=0.01` as the best tested value.
-- The optimized balanced Logistic Regression achieved the strongest overall result among my tested variants.
+Die Learning Curve zeigt, wie sich die Modellleistung mit zunehmender Trainingsdatenmenge verändert.
 
----
+![Learning Curve](images/learning_curve.png)
 
-## Technical Challenges
+Mit zunehmender Datenmenge steigt der Validation ROC-AUC, während der Training ROC-AUC sinkt.
 
-During development, several implementation issues were resolved:
+Der Abstand zwischen beiden Kurven wird kleiner.
 
-- combining numerical, categorical, binary, and sparse outputs in one preprocessing workflow;
-- type conflicts between float and object columns;
-- Scikit-Learn scorer compatibility when implementing a custom Gini scorer.
+Dies deutet darauf hin, dass zusätzliche Trainingsdaten die Generalisierung verbessern können.
 
-For cross-validation, ROC-AUC was used as the stable scoring metric and Normalized Gini was calculated as:
+## 8. Geschäftliche Erkenntnisse und Grenzen (Business Insights & Limitations)
 
-```text
-Normalized Gini = 2 × ROC-AUC - 1
-```
+### Wichtigste Erkenntnisse
 
----
+**1. Accuracy allein reicht nicht aus.**
 
-## Technologies
+Bei stark unausgeglichenen Daten kann eine hohe Accuracy irreführend sein.
 
-- Python
-- Jupyter Notebook
-- pandas
-- NumPy
-- SciPy
-- Matplotlib
-- scikit-learn
+**2. Class Balancing verbessert den Recall.**
 
-Main Scikit-Learn components:
+Durch angepasste Klassengewichte erkennt die Logistic Regression deutlich mehr positive Fälle.
 
-- `SimpleImputer`
-- `StandardScaler`
-- `OneHotEncoder`
-- `ColumnTransformer`
-- `Pipeline`
-- `LogisticRegression`
-- `MLPClassifier`
-- `StratifiedKFold`
-- `learning_curve`
-- `TruncatedSVD`
-- `GridSearchCV`
+**3. Komplexere Modelle sind nicht automatisch besser.**
 
----
+Das getestete Neural Network erzielte keine besseren ROC-AUC-Ergebnisse als die Logistic Regression.
 
-## Project Structure
+**4. Hyperparameter-Optimierung kann die Modellleistung verbessern.**
+
+GridSearchCV identifizierte `C=0.01` als besten getesteten Parameterwert.
+
+### Grenzen des Modells
+
+Trotz der Verbesserungen hat das finale Modell einige Einschränkungen:
+
+- Der ROC-AUC-Wert zeigt nur eine moderate Unterscheidungsfähigkeit.
+- Die niedrige Precision bedeutet, dass viele positive Vorhersagen falsch sind.
+- Die optimale Entscheidungsschwelle wurde nicht anhand konkreter Geschäftskosten bestimmt.
+- Vor einem praktischen Einsatz wären weitere Tests und Validierungen notwendig.
+
+### Fazit
+
+Das Projekt zeigt, dass die Behandlung von Class Imbalance einen großen Einfluss auf die Erkennung seltener Ereignisse haben kann.
+
+Gleichzeitig wird deutlich, dass die Modellleistung nicht nur anhand einzelner Kennzahlen beurteilt werden sollte.
+
+## 9. Projektstruktur und Installation (Project Structure & Installation)
+
+### Projektstruktur
 
 ```text
 porto-seguro-safe-driver-prediction/
 │
 ├── README.md
 ├── requirements.txt
-├── .gitignore
 │
 ├── notebooks/
 │   └── porto_seguro_safe_driver_prediction.ipynb
@@ -303,36 +289,102 @@ porto-seguro-safe-driver-prediction/
     └── learning_curve.png
 ```
 
----
+### Installation
 
-## How to Run
+**1. Repository klonen**
 
-1. Clone the repository.
-2. Create a Python environment.
-3. Install the dependencies:
+```bash
+git clone https://github.com/Mel95-web/porto-seguro-safe-driver-prediction.git
+```
+
+**2. In das Projektverzeichnis wechseln**
+
+```bash
+cd porto-seguro-safe-driver-prediction
+```
+
+**3. Virtuelle Umgebung erstellen**
+
+```bash
+python -m venv .venv
+```
+
+**4. Virtuelle Umgebung aktivieren**
+
+Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+Linux / macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+**5. Abhängigkeiten installieren**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Open the notebook:
+**6. Jupyter Notebook starten**
 
 ```bash
 jupyter notebook notebooks/porto_seguro_safe_driver_prediction.ipynb
 ```
 
-The dataset is retrieved from OpenML when the notebook runs, so no local dataset file is required.
+Der Datensatz wird beim Ausführen des Notebooks direkt von OpenML geladen. Eine lokale Datendatei ist deshalb nicht erforderlich.
+
+## 10. Mein persönlicher Beitrag und erworbene Kompetenzen (My Contribution & Skills Demonstrated)
+
+Dieses Projekt entstand im Rahmen einer universitären Gruppenarbeit im Modul **Advanced Data Analytics**.
+
+Alle in diesem Repository dokumentierten Analysen, Implementierungen und Ergebnisse wurden von mir eigenständig erarbeitet.
+
+### Mein persönlicher Beitrag
+
+- Datenanalyse und Datenvorverarbeitung
+- Implementierung von Preprocessing-Pipelines
+- Entwicklung und Vergleich verschiedener Machine-Learning-Modelle
+- Behandlung von Class Imbalance
+- Anwendung von Cross-Validation
+- Hyperparameter-Optimierung mit GridSearchCV
+- Untersuchung der Dimensionality Reduction mit TruncatedSVD
+- Bewertung und Interpretation der Modellergebnisse
+- Dokumentation der Ergebnisse
+
+### Eingesetzte Technologien
+
+**Programmiersprache und Umgebung**
+
+Python · Jupyter Notebook
+
+**Datenanalyse**
+
+pandas · NumPy · SciPy
+
+**Machine Learning**
+
+scikit-learn · Logistic Regression · MLPClassifier
+
+**Preprocessing und Modelloptimierung**
+
+SimpleImputer · StandardScaler · OneHotEncoder · ColumnTransformer · Pipeline · StratifiedKFold · GridSearchCV · TruncatedSVD
+
+**Visualisierung**
+
+Matplotlib
+
+### Erworbene Kompetenzen
+
+Durch dieses Projekt konnte ich meine Kenntnisse in der Datenvorverarbeitung, im Machine Learning und in der Bewertung von Klassifikationsmodellen vertiefen.
+
+Besonders wichtig war für mich der Umgang mit unausgeglichenen Datensätzen und die Interpretation verschiedener Bewertungsmetriken.
 
 ---
 
-## Author
+**Autorin:** Melanie Florine Noubissi Chimi
 
-**Melanie Florine Noubissi Chimi**
-
-Individual contribution to the **Porto Seguro Safe Driver Prediction** academic group project.
-
----
-
-## Note
-
-This repository documents my own modelling contribution to a collaborative university project. Results shown here are generated from the accompanying notebook.
+**Projekt:** Advanced Data Analytics – Porto Seguro Safe Driver Prediction
